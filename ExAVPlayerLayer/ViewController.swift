@@ -45,6 +45,7 @@ final class VideoView: UIView {
   }()
   
   private var player: AVPlayer?
+  private var playerLayer: AVPlayerLayer?
   private let url: String
   
   init(url: String) {
@@ -69,6 +70,15 @@ final class VideoView: UIView {
     self.slider.minimumValue = 0
     self.slider.maximumValue = Float(CMTimeGetSeconds(asset.duration))
     self.slider.addTarget(self, action: #selector(changeValue), for: .valueChanged)
+    
+    guard let url = URL(string: self.url) else { return }
+    self.player = AVPlayer(url: url)
+    let playerLayer = AVPlayerLayer(player: self.player)
+    playerLayer.frame = self.videoBackgroundView.bounds
+    playerLayer.videoGravity = .resizeAspectFill
+    self.playerLayer = playerLayer
+    self.videoBackgroundView.layer.addSublayer(playerLayer)
+    self.player?.play()
   }
   
   required init?(coder: NSCoder) {
@@ -77,19 +87,12 @@ final class VideoView: UIView {
   
   override func layoutSubviews() {
     super.layoutSubviews()
-
-    guard let url = URL(string: self.url) else { return }
-    self.player = AVPlayer(url: url)
-    let playerLayer = AVPlayerLayer(player: self.player)
-    playerLayer.frame = self.videoBackgroundView.bounds
-    playerLayer.videoGravity = .resizeAspectFill
-    self.videoBackgroundView.layer.addSublayer(playerLayer)
-    self.player?.play()
+    self.playerLayer?.frame = self.videoBackgroundView.bounds
   }
-  
   
   @objc private func changeValue() {
     self.player?.seek(to: CMTime(seconds: Double(self.slider.value), preferredTimescale: Int32(NSEC_PER_SEC)), completionHandler: { _ in
+      print("completion")
     })
   }
 }
