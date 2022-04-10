@@ -79,6 +79,13 @@ final class VideoView: UIView {
     self.playerLayer = playerLayer
     self.videoBackgroundView.layer.addSublayer(playerLayer)
     self.player?.play()
+    
+    let interval = CMTimeMakeWithSeconds(1, preferredTimescale: Int32(NSEC_PER_SEC))
+    self.player?.addPeriodicTimeObserver(forInterval: interval, queue: .main, using: { [weak self] elapsedSeconds in
+      let elapsedTimeSecondsFloat = CMTimeGetSeconds(elapsedSeconds)
+      let totalTimeSecondsFloat = CMTimeGetSeconds(self?.player?.currentItem?.duration ?? CMTimeMake(value: 1, timescale: 1))
+      print(elapsedTimeSecondsFloat, totalTimeSecondsFloat)
+    })
   }
   
   required init?(coder: NSCoder) {
@@ -87,6 +94,7 @@ final class VideoView: UIView {
   
   override func layoutSubviews() {
     super.layoutSubviews()
+    
     self.playerLayer?.frame = self.videoBackgroundView.bounds
   }
   
