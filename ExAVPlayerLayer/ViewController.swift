@@ -44,14 +44,13 @@ final class VideoView: UIView {
     return slider
   }()
   
-  private var player: AVPlayer?
+  private var player = AVPlayer()
   private var playerLayer: AVPlayerLayer?
   private let url: String
   
   init(url: String) {
     self.url = url
     super.init(frame: .zero)
-    guard let url = URL(string: url) else { return }
     
     NSLayoutConstraint.activate([
       self.videoBackgroundView.leftAnchor.constraint(equalTo: self.leftAnchor),
@@ -66,24 +65,24 @@ final class VideoView: UIView {
       self.slider.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -16),
     ])
   
-    let asset = AVAsset(url: url)
-    self.slider.minimumValue = 0
-    self.slider.maximumValue = Float(CMTimeGetSeconds(asset.duration))
-    self.slider.addTarget(self, action: #selector(changeValue), for: .valueChanged)
-    
     guard let url = URL(string: self.url) else { return }
-    self.player = AVPlayer(url: url)
+    let item = AVPlayerItem(url: url)
+    self.player.replaceCurrentItem(with: item)
     let playerLayer = AVPlayerLayer(player: self.player)
     playerLayer.frame = self.videoBackgroundView.bounds
     playerLayer.videoGravity = .resizeAspectFill
     self.playerLayer = playerLayer
     self.videoBackgroundView.layer.addSublayer(playerLayer)
-    self.player?.play()
+    self.player.play()
+    
+    self.slider.minimumValue = 0
+    self.slider.maximumValue = Float(CMTimeGetSeconds(item.duration))
+    self.slider.addTarget(self, action: #selector(changeValue), for: .valueChanged)
     
     let interval = CMTimeMakeWithSeconds(1, preferredTimescale: Int32(NSEC_PER_SEC))
-    self.player?.addPeriodicTimeObserver(forInterval: interval, queue: .main, using: { [weak self] elapsedSeconds in
+    self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main, using: { [weak self] elapsedSeconds in
       let elapsedTimeSecondsFloat = CMTimeGetSeconds(elapsedSeconds)
-      let totalTimeSecondsFloat = CMTimeGetSeconds(self?.player?.currentItem?.duration ?? CMTimeMake(value: 1, timescale: 1))
+      let totalTimeSecondsFloat = CMTimeGetSeconds(self?.player.currentItem?.duration ?? CMTimeMake(value: 1, timescale: 1))
       print(elapsedTimeSecondsFloat, totalTimeSecondsFloat)
     })
   }
@@ -99,7 +98,7 @@ final class VideoView: UIView {
   }
   
   @objc private func changeValue() {
-    self.player?.seek(to: CMTime(seconds: Double(self.slider.value), preferredTimescale: Int32(NSEC_PER_SEC)), completionHandler: { _ in
+    self.player.seek(to: CMTime(seconds: Double(self.slider.value), preferredTimescale: Int32(NSEC_PER_SEC)), completionHandler: { _ in
       print("completion")
     })
   }
