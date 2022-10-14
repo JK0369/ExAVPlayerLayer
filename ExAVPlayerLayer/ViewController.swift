@@ -75,8 +75,11 @@ final class VideoView: UIView {
     self.videoBackgroundView.layer.addSublayer(playerLayer)
     self.player.play()
     
-    self.slider.minimumValue = 0
-    self.slider.maximumValue = Float(CMTimeGetSeconds(item.duration))
+    if self.player.currentItem?.status == .readyToPlay {
+      self.slider.minimumValue = 0
+      self.slider.maximumValue = Float(CMTimeGetSeconds(item.duration))
+    }
+    
     self.slider.addTarget(self, action: #selector(changeValue), for: .valueChanged)
     
     let interval = CMTimeMakeWithSeconds(1, preferredTimescale: Int32(NSEC_PER_SEC))
